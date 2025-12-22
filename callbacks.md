@@ -157,3 +157,86 @@ If you remember only these, you’re good:
 5. `before_destroy`
 
 ---
+---
+They trigger on:
+
+```ruby
+person.things << thing
+person.things.delete(thing)
+```
+
+---
+
+## 2️⃣ Simple use case for `Person`
+
+Let’s say:
+
+* A **Person can have many Tasks**
+* A **Person can have at most 3 tasks**
+
+---
+
+## 3️⃣ Create the association
+
+### Models
+
+### `app/models/person.rb`
+
+```ruby
+class Person < ApplicationRecord
+  has_many :tasks, before_add: :check_task_limit
+
+  private
+
+  def check_task_limit(_task)
+    if tasks.count >= 3
+      errors.add(:base, "Cannot add more than 3 tasks")
+      throw(:abort)
+    end
+  end
+end
+```
+
+---
+
+### `app/models/task.rb`
+
+```ruby
+class Task < ApplicationRecord
+  belongs_to :person
+end
+```
+
+---
+
+## 4️⃣ Migration (tables)
+
+### Person table (already exists)
+
+```ruby
+# people
+# id, name
+```
+
+### Task table
+
+```bash
+bin/rails generate model Task title:string person:references
+bin/rails db:migrate
+```
+
+---
+
+## 5️⃣ Try it in Rails console (IMPORTANT)
+
+```bash
+bin/rails console
+```
+
+```ruby
+p = Person.create(name: "Aswin")
+
+p.tasks.create(title: "Task 1")
+p.tasks.create(title: "Task 2")
+p.tasks.create(title: "Task 3")
+```
